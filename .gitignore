@@ -1,0 +1,36 @@
+# Environment variables and secrets (CRITICAL)
+.env
+.env.local
+.env.*.local
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/

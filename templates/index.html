@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Live News Ticker Desk | Editorial Studio</title>
+    <style>
+      :root {
+        --bg: #0f141c;
+        --panel: #18202c;
+        --panel-border: #273548;
+        --text: #e2e8f0;
+        --muted: #8e9fb5;
+        --accent-red: #e53e3e;
+        --accent-blue: #3182ce;
+        --accent-green: #38a169;
+        --accent-yellow: #d69e2e;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* ROW 1: HEADER & ACTIONS */
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--panel-border);
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      h1 {
+        font-size: 20px;
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .badge {
+        background: var(--accent-red);
+        color: #fff;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+      }
+
+      /* ROW 2: FULL-WIDTH BROADCAST SCROLLER */
+      .broadcast-ticker-bar {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        background: #090d13;
+        border: 1px solid #dc2626;
+        border-radius: 6px;
+        overflow: hidden;
+        height: 42px;
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.2);
+      }
+
+      .ticker-label {
+        background: #dc2626;
+        color: #fff;
+        font-weight: 900;
+        font-size: 12px;
+        padding: 0 18px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        letter-spacing: 1.2px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .ticker-track-container {
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+      }
+
+      .ticker-track {
+        display: inline-block;
+        padding-left: 100%;
+        animation: scroll-ticker 30s linear infinite;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        color: #f8fafc;
+        letter-spacing: 0.5px;
+      }
+
+      .ticker-track:hover {
+        animation-play-state: paused;
+      }
+
+      .ticker-item-bubble {
+        display: inline-block;
+        margin-right: 40px;
+      }
+
+      .ticker-bullet {
+        color: #eab308;
+        margin-right: 10px;
+      }
+
+      @keyframes scroll-ticker {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      /* ROW 3: TWO-COLUMN WORKBENCH */
+      .layout {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 20px;
+        margin-top: 4px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      h2 {
+        font-size: 14px;
+        color: #cbd5e1;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      textarea {
+        width: 100%;
+        background: #0b0f15;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        color: #fff;
+        padding: 10px;
+        font-size: 13px;
+        line-height: 1.4;
+        resize: vertical;
+      }
+
+      textarea:focus {
+        outline: 1px solid var(--accent-blue);
+      }
+
+      .tab-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+
+      .tab-btn {
+        background: transparent;
+        border: 1px solid var(--panel-border);
+        color: var(--muted);
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .tab-btn.active {
+        background: var(--panel-border);
+        color: #fff;
+        font-weight: bold;
+      }
+
+      .btn {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: none;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: opacity 0.2s;
+      }
+
+      .btn:hover {
+        opacity: 0.9;
+      }
+
+      .btn-primary {
+        background: var(--accent-red);
+        color: #fff;
+      }
+
+      .btn-green {
+        background: var(--accent-green);
+        color: #fff;
+      }
+
+      .btn-outline {
+        background: transparent;
+        border: 1px solid var(--panel-border);
+        color: #fff;
+      }
+
+      /* Cards */
+      .ticker-card {
+        background: #121924;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 12px;
+        transition: border-color 0.2s;
+      }
+
+      .ticker-card.approved {
+        border-left: 4px solid var(--accent-green);
+      }
+
+      .ticker-card.flagged {
+        border-left: 4px solid var(--accent-yellow);
+      }
+
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .order-controls {
+        display: flex;
+        gap: 4px;
+      }
+
+      .btn-sm {
+        background: #1f2b3b;
+        border: 1px solid var(--panel-border);
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+      }
+
+      .source-box {
+        background: #0a0e14;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: var(--muted);
+        max-height: 60px;
+        overflow-y: auto;
+        border: 1px dashed #223042;
+      }
+
+      .ticker-input {
+        font-family: monospace;
+        font-size: 14px;
+        font-weight: bold;
+        color: #38bdf8;
+        background: #090d12;
+        border: 1px solid #273548;
+        padding: 8px;
+        border-radius: 4px;
+        width: 100%;
+      }
+
+      .ticker-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+      }
+
+      .pill {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      .pill-ok {
+        background: #1c3d2e;
+        color: #4ade80;
+      }
+
+      .pill-warn {
+        background: #453411;
+        color: #facc15;
+      }
+
+      .actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      /* Modal */
+      #exportModal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.8);
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+      }
+
+      .modal-box {
+        background: var(--panel);
+        width: 600px;
+        max-width: 90%;
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid var(--panel-border);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ROW 1: HEADER & ACTIONS -->
+    <header>
+      <div class="header-left">
+        <span class="badge">LIVE</span>
+        <h1>News Ticker Generation & Editorial Review Desk</h1>
+      </div>
+      <div>
+        <button class="btn btn-green" onclick="openExportModal()">
+          🚀 Export Approved Feed
+        </button>
+      </div>
+    </header>
+
+    <!-- ROW 2: FULL-WIDTH BROADCAST SCROLLER -->
+    <div class="broadcast-ticker-bar">
+      <div class="ticker-label">BREAKING NEWS</div>
+      <div class="ticker-track-container">
+        <div class="ticker-track" id="liveTickerTrack">
+          <span class="ticker-item-bubble"
+            >AWAITING EDITORIAL APPROVAL... TICKERS WILL STREAM HERE IN REAL
+            TIME</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3: TWO-COLUMN WORKBENCH -->
+    <div class="layout">
+      <!-- INTAKE PANEL -->
+      <div class="panel">
+        <h2>1. Announcement Intake</h2>
+        <div class="tab-bar">
+          <button
+            class="tab-btn active"
+            id="tabSingle"
+            onclick="switchTab('single')"
+          >
+            Single Entry
+          </button>
+          <button class="tab-btn" id="tabBatch" onclick="switchTab('batch')">
+            Batch Import (Multi)
+          </button>
+        </div>
+
+        <div id="singleEntryMode">
+          <textarea
+            id="singleInput"
+            rows="10"
+            placeholder="Paste press release or announcement here..."
+          ></textarea>
+        </div>
+
+        <div id="batchEntryMode" style="display: none">
+          <textarea
+            id="batchInput"
+            rows="10"
+            placeholder="Paste multiple announcements separated by '---' on a new line..."
+          ></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="submitAnnouncements()">
+          ⚡ Generate Tickers
+        </button>
+      </div>
+
+      <!-- EDITORIAL REVIEW WORKBENCH -->
+      <div class="panel">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h2>
+            2. Editorial Review & Sequencing (<span id="totalCount">0</span>
+            items)
+          </h2>
+          <button
+            class="btn-sm"
+            style="background: #3f1d24; border-color: #7f1d1d; color: #fca5a5"
+            onclick="clearAllTickers()"
+          >
+            🗑️ Clear All
+          </button>
+        </div>
+        <div id="tickerList">
+          <div
+            style="
+              color: var(--muted);
+              font-size: 13px;
+              text-align: center;
+              padding: 40px;
+            "
+          >
+            No announcements imported yet. Paste text on the left to begin.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT MODAL -->
+    <div id="exportModal">
+      <div class="modal-box">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h2 style="color: #fff">Machine-Readable Broadcast Export</h2>
+          <button class="btn-sm" onclick="closeExportModal()">✕</button>
+        </div>
+        <p style="font-size: 12px; color: var(--muted)">
+          Production-ready payload sorted in designated broadcast transmission
+          sequence.
+        </p>
+        <textarea
+          id="exportJson"
+          rows="12"
+          readonly
+          style="font-family: monospace; font-size: 12px"
+        ></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 8px">
+          <button class="btn btn-primary" onclick="copyExportJson()">
+            📋 Copy JSON
+          </button>
+          <button class="btn btn-outline" onclick="closeExportModal()">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let items = [];
+
+      function switchTab(mode) {
+        document
+          .getElementById("tabSingle")
+          .classList.toggle("active", mode === "single");
+        document
+          .getElementById("tabBatch")
+          .classList.toggle("active", mode === "batch");
+        document.getElementById("singleEntryMode").style.display =
+          mode === "single" ? "block" : "none";
+        document.getElementById("batchEntryMode").style.display =
+          mode === "batch" ? "block" : "none";
+      }
+
+      async function submitAnnouncements() {
+        const isSingle = document
+          .getElementById("tabSingle")
+          .classList.contains("active");
+        let announcements = [];
+
+        if (isSingle) {
+          const val = document.getElementById("singleInput").value.trim();
+          if (val) announcements.push(val);
+        } else {
+          const val = document.getElementById("batchInput").value.trim();
+          announcements = val
+            .split(/\n\s*---\s*\n/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+
+        if (!announcements.length) {
+          alert("Please paste announcement text.");
+          return;
+        }
+
+        const res = await fetch("/api/announcements", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ announcements }),
+        });
+        const data = await res.json();
+        items = items.concat(data.items);
+        renderList();
+
+        document.getElementById("singleInput").value = "";
+        document.getElementById("batchInput").value = "";
+      }
+
+      function renderList() {
+        const container = document.getElementById("tickerList");
+        document.getElementById("totalCount").innerText = items.length;
+
+        if (!items.length) {
+          container.innerHTML = `<div style="color:var(--muted); font-size:13px; text-align:center; padding: 40px;">No announcements imported.</div>`;
+          return;
+        }
+
+        container.innerHTML = items
+          .map((item, idx) => {
+            const wordCount = item.ticker
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean).length;
+            const isOverLimit = wordCount > 10;
+            const drift = item.verification && item.verification.drift_flag;
+            const reasons = item.verification
+              ? item.verification.reasons.join(", ")
+              : "";
+
+            return `
+            <div class="ticker-card ${item.approved ? "approved" : ""} ${drift ? "flagged" : ""}" id="card-${item.id}">
+              <div class="card-top">
+                <span style="font-size:11px; font-weight:bold; color:var(--muted);">#${idx + 1} | ID: ${item.id}</span>
+                <div class="order-controls">
+                  <button class="btn-sm" onclick="moveItem(${idx}, -1)" ${idx === 0 ? "disabled" : ""}>▲ Up</button>
+                  <button class="btn-sm" onclick="moveItem(${idx}, 1)" ${idx === items.length - 1 ? "disabled" : ""}>▼ Down</button>
+                </div>
+              </div>
+
+              <div class="source-box" title="Full Source Text">
+                <strong>Source:</strong> ${escapeHtml(item.source)}
+              </div>
+
+              <input type="text" 
+                     class="ticker-input" 
+                     value="${escapeHtml(item.ticker)}" 
+                     oninput="handleTickerEdit('${item.id}', this.value)" />
+
+              <div class="ticker-meta">
+                <div>
+                  <span class="pill ${isOverLimit ? "pill-warn" : "pill-ok"}">
+                    ${wordCount}/10 Words
+                  </span>
+                  ${drift ? `<span class="pill pill-warn" title="${escapeHtml(reasons)}">⚠️ Drift Detected</span>` : ""}
+                </div>
+
+                <div class="actions">
+                  <button class="btn-sm" onclick="revertTicker('${item.id}')" title="Revert to original generation">↺ Undo</button>
+                  <button class="btn-sm" onclick="regenerateTicker('${item.id}')">⚡ Regen</button>
+                  <button class="btn-sm ${item.approved ? "btn-green" : "btn-outline"}" onclick="toggleApprove('${item.id}')">
+                    ${item.approved ? "✓ Approved" : "Approve"}
+                  </button>
+                  <button class="btn-sm" style="background: #37181d; color: #f87171; border-color: #7f1d1d;" onclick="deleteTicker('${item.id}')" title="Delete ticker">✕</button>
+                </div>
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.innerText = text;
+        return div.innerHTML;
+      }
+
+      async function handleTickerEdit(id, newText) {
+        const item = items.find((i) => i.id === id);
+        if (!item) return;
+        item.ticker = newText;
+
+        const wordCount = newText.trim().split(/\s+/).filter(Boolean).length;
+        const card = document.getElementById(`card-${id}`);
+        const pill = card.querySelector(".ticker-meta .pill");
+        pill.innerText = `${wordCount}/10 Words`;
+        pill.className = `pill ${wordCount > 10 ? "pill-warn" : "pill-ok"}`;
+
+        await fetch(`/api/tickers/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ticker: newText }),
+        });
+        if (item.approved) updateLiveTickerDisplay();
+      }
+
+      async function toggleApprove(id) {
+        const item = items.find((i) => i.id === id);
+        if (!item) return;
+        item.approved = !item.approved;
+
+        await fetch(`/api/tickers/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ approved: item.approved }),
+        });
+        renderList();
+        updateLiveTickerDisplay();
+      }
+
+      async function deleteTicker(id) {
+        if (!confirm("Are you sure you want to delete this ticker?")) return;
+
+        const res = await fetch(`/api/tickers/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          items = items.filter((i) => i.id !== id);
+          renderList();
+          updateLiveTickerDisplay();
+        }
+      }
+
+      async function clearAllTickers() {
+        if (!items.length) return;
+        if (!confirm("Are you sure you want to remove all tickers?")) return;
+
+        const res = await fetch("/api/tickers/clear", { method: "POST" });
+        if (res.ok) {
+          items = [];
+          renderList();
+          updateLiveTickerDisplay();
+        }
+      }
+
+      async function revertTicker(id) {
+        const res = await fetch(`/api/tickers/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ revert: true }),
+        });
+        const data = await res.json();
+        const idx = items.findIndex((i) => i.id === id);
+        items[idx] = data.item;
+        renderList();
+        updateLiveTickerDisplay();
+      }
+
+      async function regenerateTicker(id) {
+        const res = await fetch(`/api/tickers/${id}/regenerate`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        const idx = items.findIndex((i) => i.id === id);
+        items[idx] = data.item;
+        renderList();
+        updateLiveTickerDisplay();
+      }
+
+      async function moveItem(index, offset) {
+        const target = index + offset;
+        if (target < 0 || target >= items.length) return;
+
+        const temp = items[index];
+        items[index] = items[target];
+        items[target] = temp;
+        renderList();
+
+        await fetch("/api/tickers/reorder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ordered_ids: items.map((i) => i.id) }),
+        });
+        updateLiveTickerDisplay();
+      }
+
+      async function updateLiveTickerDisplay() {
+        try {
+          const res = await fetch("/api/export");
+          const data = await res.json();
+          const track = document.getElementById("liveTickerTrack");
+
+          if (!data.tickers || data.tickers.length === 0) {
+            track.innerHTML = `<span class="ticker-item-bubble">AWAITING EDITORIAL APPROVAL... TICKERS WILL STREAM HERE IN REAL TIME</span>`;
+            return;
+          }
+
+          const tickerHtml = data.tickers
+            .map(
+              (item) =>
+                `<span class="ticker-item-bubble"><span class="ticker-bullet">■</span>${escapeHtml(item.ticker_text)}</span>`,
+            )
+            .join("");
+
+          track.innerHTML = tickerHtml + " " + tickerHtml;
+        } catch (err) {
+          console.error("Live ticker polling error:", err);
+        }
+      }
+
+      async function openExportModal() {
+        const res = await fetch("/api/export");
+        const data = await res.json();
+        document.getElementById("exportJson").value = JSON.stringify(
+          data,
+          null,
+          2,
+        );
+        document.getElementById("exportModal").style.display = "flex";
+      }
+
+      function closeExportModal() {
+        document.getElementById("exportModal").style.display = "none";
+      }
+
+      function copyExportJson() {
+        const val = document.getElementById("exportJson").value;
+        navigator.clipboard.writeText(val);
+        alert("Structured JSON copied to clipboard!");
+      }
+
+      updateLiveTickerDisplay();
+      setInterval(updateLiveTickerDisplay, 4000);
+    </script>
+  </body>
+</html>
