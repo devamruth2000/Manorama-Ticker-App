@@ -1,4 +1,5 @@
 import os
+import random
 import re
 import uuid
 from datetime import datetime, timezone
@@ -58,8 +59,10 @@ def detect_hallucination_and_drift(ticker_text: str, source_text: str) -> dict:
   }
 
 
-def generate_ticker_offline(source_text: str) -> str:
-  """Smart heuristic summarizer when no AI/API key is present."""
+def generate_ticker_offline(
+    source_text: str, previous_versions: list = None
+) -> str:
+  """Heuristic summarizer that rotates through multiple word-windows when offline."""
   clean_text = re.sub(r"[^\w\s$%]", "", source_text)
   words = clean_text.split()
   stop_words = {
@@ -92,14 +95,50 @@ def generate_ticker_offline(source_text: str) -> str:
       "after",
   }
   important_words = [w for w in words if w.lower() not in stop_words]
-  selected = important_words[:8] if important_words else words[:8]
-  return " ".join(selected).upper()
+  if not important_words:
+    important_words = words
+
+  candidates = []
+  # Candidate 1: Leading key facts
+  candidates.append(" ".join(important_words[:8]).upper())
+  # Candidate 2: Verb/action shift
+  if len(important_words) > 5:
+    candidates.append(" ".join(important_words[1:9]).upper())
+  # Candidate 3: Core payload / numeric tail
+  if len(important_words) >= 8:
+    candidates.append(" ".join(important_words[-7:]).upper())
+  # Candidate 4: Alternate stride
+  if len(important_words) >= 6:
+    candidates.append(" ".join(important_words[2:8]).upper())
+
+  prev_set = set(previous_versions or [])
+  for cand in candidates:
+    if cand not in prev_set:
+      return cand
+
+  # If all candidates exhausted, pick a randomized factual sub-window
+  start_idx = random.randint(0, max(0, len(important_words) - 6))
+  return " ".join(important_words[start_idx : start_idx + 7]).upper()
 
 
-def generate_ticker_ai(source_text: str) -> str:
-  """Generates a strictly grounded, <= 10 word broadcast ticker."""
+def generate_ticker_ai(
+    source_text: str, previous_versions: list = None
+) -> str:
+  """Generates a strictly grounded, <= 10 word broadcast ticker.
+
+  Avoids repeating any phrasing provided in previous_versions.
+  """
   if not client:
-    return generate_ticker_offline(source_text)
+    return generate_ticker_offline(source_text, previous_versions)
+
+  avoid_clause = ""
+  if previous_versions:
+    formatted_prev = "\n".join([f"- {v}" for v in previous_versions if v])
+    avoid_clause = f"""
+PREVIOUS VARIATIONS TO AVOID (DO NOT REPEAT):
+{formatted_prev}
+Select an alternative active verb or focus on a different key metric/angle from the announcement.
+"""
 
   prompt = f"""
 SYSTEM INSTRUCTION:
@@ -111,7 +150,7 @@ STRICT CONSTRAINTS:
 2. ABSOLUTELY ZERO OUTSIDE KNOWLEDGE OR HALLUCINATION. Do not infer causes, company valuations, motivations, or consequences not explicitly printed.
 3. Broadcast style: Use active verbs, omit filler articles (a, an, the) when possible, UPPERCASE.
 4. If a fact or number is not stated verbatim, DO NOT INCLUDE IT.
-
+{avoid_clause}
 ANNOUNCEMENT:
 \"\"\"{source_text}\"\"\"
 
@@ -120,9 +159,10 @@ Output ONLY the ticker text. No quotation marks, no explanations.
   models = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.8-flash"]
   for model in models:
     try:
-      response = client.models.generate_content(model=model, contents=prompt)
+      response = client.models.generate_content(
+          model=model, contents=prompt, config={"temperature": 0.7}
+      )
       cleaned = response.text.strip().replace('"', "").replace("\n", " ")
-      # Truncate to maximum 10 words if the model overshoots
       words = cleaned.split()
       if len(words) > 10:
         cleaned = " ".join(words[:10])
@@ -131,7 +171,7 @@ Output ONLY the ticker text. No quotation marks, no explanations.
       print(f"Model {model} failed: {e}")
       continue
 
-  return generate_ticker_offline(source_text)
+  return generate_ticker_offline(source_text, previous_versions)
 
 
 @app.route("/")
@@ -165,6 +205,7 @@ def ingest_announcements():
         "source": raw_text,
         "ticker": ticker,
         "original_ticker": ticker,
+        "history": [ticker],
         "approved": False,
         "order": current_order,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -206,13 +247,22 @@ def update_ticker(item_id):
 
 @app.route("/api/tickers/<item_id>/regenerate", methods=["POST"])
 def regenerate_ticker(item_id):
-  """Regenerates an individual ticker alternative."""
+  """Regenerates a new unique alternative by passing history of prior versions."""
   if item_id not in SESSION_STORE:
     return jsonify({"error": "Not found"}), 404
 
   item = SESSION_STORE[item_id]
-  new_ticker = generate_ticker_ai(item["source"])
+
+  if "history" not in item:
+    item["history"] = [item["ticker"]]
+  elif item["ticker"] not in item["history"]:
+    item["history"].append(item["ticker"])
+
+  new_ticker = generate_ticker_ai(
+      item["source"], previous_versions=item["history"]
+  )
   item["ticker"] = new_ticker
+  item["history"].append(new_ticker)
   item["verification"] = detect_hallucination_and_drift(
       new_ticker, item["source"]
   )

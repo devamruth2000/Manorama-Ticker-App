@@ -514,10 +514,11 @@
           if (val) announcements.push(val);
         } else {
           const val = document.getElementById("batchInput").value.trim();
+          // Cross-platform split across Windows (\r\n) and Unix (\n) line breaks
           announcements = val
-            .split(/\n\s*---\s*\n/)
+            .split(/\r?\n\s*---\s*\r?\n/)
             .map((s) => s.trim())
-            .filter(Boolean);
+            .filter((s) => s.length > 0);
         }
 
         if (!announcements.length) {
@@ -677,14 +678,27 @@
       }
 
       async function regenerateTicker(id) {
-        const res = await fetch(`/api/tickers/${id}/regenerate`, {
-          method: "POST",
-        });
-        const data = await res.json();
-        const idx = items.findIndex((i) => i.id === id);
-        items[idx] = data.item;
-        renderList();
-        updateLiveTickerDisplay();
+        try {
+          const res = await fetch(`/api/tickers/${id}/regenerate`, {
+            method: "POST",
+          });
+
+          if (!res.ok) {
+            alert("Failed to regenerate ticker.");
+            return;
+          }
+
+          const data = await res.json();
+          const idx = items.findIndex((i) => i.id === id);
+          if (idx !== -1) {
+            items[idx] = data.item;
+            renderList();
+            updateLiveTickerDisplay();
+          }
+        } catch (err) {
+          console.error("Regeneration error:", err);
+          alert("Network error while regenerating.");
+        }
       }
 
       async function moveItem(index, offset) {
