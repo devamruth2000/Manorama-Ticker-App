@@ -46,3 +46,15 @@ Plaintext
 
 
 ```
+
+Project Summary: Live News Ticker DeskProject Objective: A full-stack, broadcast-style web desk engineered to ingest raw news announcements, condense them into strict $\le 10$-word tickers, flag hallucinations/drift, enable live editorial review/reordering, and export machine-readable transmission feeds
+.Tech Stack:
+Backend: Python (Flask) with REST endpoints (/api/announcements, /api/tickers/<id>, /api/export).
+Frontend: Vanilla HTML5, CSS3, and JavaScript featuring a dual-intake interface, draggable/shiftable cards, and a live broadcast marquee scroller.
+AI & Fallback: Google Gemini API (google-genai SDK) for generative distillation, paired with a deterministic pure-Python heuristic engine for zero-dependency offline operation.
+Core Mechanisms:
+Fidelity & Zero-Hallucination: Grounded negative prompt directives coupled with an algorithmic server-side regex validator that checks numbers, percentages, and currencies against the source text to trigger ⚠️ Drift Detected alerts.
+Length Enforcement: Generative hard boundary combined with real-time client-side word-count metering ($\le 10$ words).
+Editorial Controls: Source-text visibility, in-place editing, sequential reordering, multi-variation regeneration (⚡ Regen), undo/revert (↺ Undo), card deletion (✕), and list wiping (🗑️ Clear All).
+Broadcast JSON Export: Formatted endpoint (GET /api/export) delivering sequence-indexed approved tickers with metadata for downstream newsroom character generators.
+Deployment Repository: Active, clean, and documented at [https://github.com/devamruth2000/Manorama-Ticker-App](https://github.com/devamruth2000/Manorama-Ticker-App).
